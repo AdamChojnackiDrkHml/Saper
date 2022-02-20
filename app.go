@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"Saper/game"
 	"bufio"
 	"os"
@@ -33,8 +34,16 @@ func main() {
 			break
 		}
 
-		board.CheckField(x, y)
-		board.PrintPlayerBoard()
+		state := board.CheckField(x, y)
+		if state == game.GameOver {
+			board.CheckAllBombs()
+		}
 
+		board.PrintPlayerBoard()
+	
+		if state == game.GameOver {
+			fmt.Println("\nGAME OVER") 
+			break
+		}
 	}
 }
