@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
+
+	"github.com/kyokomi/emoji"
 )
 
 type boardS struct {
@@ -39,7 +41,7 @@ func CreateBoard(width, height, bombsNum int) *boardS {
 	rand.Seed(time.Now().UnixNano())
 	for bombsNum != 0 {
 		leftFields := len(dataFields1D)
-		for i, _ := range dataFields1D {
+		for i := range dataFields1D {
 			chances := float64(bombsNum) / float64(leftFields)
 			if bombsNum == 0 {
 				break
@@ -58,8 +60,8 @@ func CreateBoard(width, height, bombsNum int) *boardS {
 	}
 
 	for i, row := range newBoard.dataFields {
-		for j, _ := range row {
-			newBoard.dataFields[i][j] = checkNeighborus(newBoard.dataFields, i, j)
+		for j := range row {
+			newBoard.dataFields[i][j] = newBoard.countBombs(i, j)
 			newBoard.fields[i][j] = FieldType(newBoard.dataFields[i][j])
 		}
 	}
@@ -67,28 +69,43 @@ func CreateBoard(width, height, bombsNum int) *boardS {
 	return newBoard
 }
 
-func checkNeighborus(fields [][]int, xCord, yCord int) int {
-	if fields[xCord][yCord] == 9 {
+func (board *boardS) countBombs(xCord, yCord int) int {
+	if board.dataFields[xCord][yCord] == 9 {
 		return 9
 	}
-	var neighbours [][2]int
+
 	counter := 0
-	if xCord != 0 && xCord != len(fields)-1 && yCord != 0 && yCord != len(fields[0])-1 {
-		neighbours = [][2]int{{-1, -1}, {-1, 0}, {-1, 1}, {1, -1}, {1, 0}, {1, 1}, {0, -1}, {0, 1}}
+
+	neighbours := checkNeighborus(board.height, board.height, xCord, yCord)
+	// fmt.Println(xCord, " ", yCord, ": ")
+	for _, neighbour := range neighbours {
+		// fmt.Print(xCord+neighbour[0], " ", yCord+neighbour[1], " ")
+		if board.dataFields[xCord+neighbour[0]][yCord+neighbour[1]] == 9 {
+			counter++
+		}
+	}
+	// fmt.Println()
+	return counter
+}
+
+func checkNeighborus(xLen, yLen, xCord, yCord int) (neighbours [][2]int) {
+
+	if xCord != 0 && xCord != xLen-1 && yCord != 0 && yCord != yLen-1 {
+		return [][2]int{{-1, -1}, {-1, 0}, {-1, 1}, {1, -1}, {1, 0}, {1, 1}, {0, -1}, {0, 1}}
 	}
 
 	if xCord == 0 {
 		if yCord == 0 {
 			neighbours = [][2]int{{1, 0}, {1, 1}, {0, 1}}
-		} else if yCord == len(fields[0])-1 {
+		} else if yCord == yLen-1 {
 			neighbours = [][2]int{{1, 0}, {1, -1}, {0, -1}}
 		} else {
 			neighbours = [][2]int{{1, 0}, {1, -1}, {0, -1}, {1, 1}, {0, 1}}
 		}
-	} else if xCord == len(fields)-1 {
+	} else if xCord == xLen-1 {
 		if yCord == 0 {
 			neighbours = [][2]int{{-1, 0}, {-1, 1}, {0, 1}}
-		} else if yCord == len(fields[0])-1 {
+		} else if yCord == yLen-1 {
 			neighbours = [][2]int{{-1, 0}, {-1, -1}, {0, -1}}
 		} else {
 			neighbours = [][2]int{{-1, 0}, {-1, -1}, {0, -1}, {-1, 1}, {0, 1}}
@@ -101,12 +118,7 @@ func checkNeighborus(fields [][]int, xCord, yCord int) int {
 		}
 	}
 
-	for _, neighbour := range neighbours {
-		if fields[xCord+neighbour[0]][yCord+neighbour[1]] == 9 {
-			counter++
-		}
-	}
-	return counter
+	return neighbours
 }
 
 func (board *boardS) PrintBoard() {
@@ -120,16 +132,56 @@ func (board *boardS) PrintPlayerBoard() {
 	for i, row := range board.playerFields {
 		fmt.Printf("%d\t", i)
 		for _, ch := range row {
-			fmt.Print("[" + ch + "]\t")
+			if ch == "x" {
+				emoji.Print(":green_square:\t")
+				continue
+			}
+			fmt.Print(ch + "\t")
 		}
 		fmt.Println()
 	}
 }
 
-func (board *boardS) CheckField(xCord, yCord int) bool {
+func (board *boardS) CheckField(xCord, yCord int) State {
 	if xCord < 0 || xCord > board.height-1 || yCord < 0 || yCord > board.width-1 {
-		return false
+		return Invalid
+	}
+
+	if board.dataFields[xCord][yCord] == BOMB {
+		board.playerFields[xCord][yCord] = emoji.Sprint(":bomb:")
+		return GameOver
+	}
+	if board.dataFields[xCord][yCord] == ZERO {
+		board.revealEmpty(xCord, yCord)
+		return Valid
 	}
 	board.playerFields[xCord][yCord] = strconv.Itoa(board.dataFields[xCord][yCord])
-	return true
+	return Valid
+}
+
+func (board *boardS) CheckAllBombs() {
+	for i, row := range board.dataFields {
+		for j := range row {
+			if board.dataFields[i][j] == BOMB {
+				board.playerFields[i][j] = emoji.Sprint(":bomb:")
+			}
+		}
+	}
+}
+
+func (board *boardS) revealEmpty(xCord, yCord int) {
+	if board.dataFields[xCord][yCord] == 0 && board.playerFields[xCord][yCord] == "x" {
+		board.playerFields[xCord][yCord] = "O"
+		neighbours := checkNeighborus(board.height, board.width, xCord, yCord)
+
+		for _, neigh := range neighbours {
+			board.revealEmpty(xCord+neigh[0], yCord+neigh[1])
+		}
+
+		return
+	}
+
+	if board.dataFields[xCord][yCord] != 9 && board.dataFields[xCord][yCord] != 0 {
+		board.playerFields[xCord][yCord] = strconv.Itoa(board.dataFields[xCord][yCord])
+	}
 }
