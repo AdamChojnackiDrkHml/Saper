@@ -112,7 +112,7 @@ func checkNeighborus(xLen, yLen, xCord, yCord int) (neighbours [][2]int) {
 		}
 	} else {
 		if yCord == 0 {
-			neighbours = [][2]int{{-1, 0}, {-1, 1}, {0, 1}, {-1, 1}, {-1, 0}}
+			neighbours = [][2]int{{-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}}
 		} else {
 			neighbours = [][2]int{{-1, 0}, {-1, -1}, {0, -1}, {1, -1}, {1, 0}}
 		}
@@ -128,15 +128,18 @@ func (board *boardS) PrintBoard() {
 }
 
 func (board *boardS) PrintPlayerBoard() {
-	fmt.Print("T\t0\t1\t2\t3\t4\n")
-	for i, row := range board.playerFields {
-		fmt.Printf("%d\t", i)
+
+	for _, row := range board.playerFields {
 		for _, ch := range row {
 			if ch == "x" {
-				emoji.Print(":green_square:\t")
+				emoji.Print(":green_square:")
 				continue
+			} else if ch == "O" {
+				emoji.Print(":white_large_square:")
+			} else if ch != ":bomb:" {
+				emoji.Print(":keycap_" + ch + ": ")
 			}
-			fmt.Print(ch + "\t")
+			///fmt.Print(ch + "\t")
 		}
 		fmt.Println()
 	}
@@ -170,18 +173,20 @@ func (board *boardS) CheckAllBombs() {
 }
 
 func (board *boardS) revealEmpty(xCord, yCord int) {
-	if board.dataFields[xCord][yCord] == 0 && board.playerFields[xCord][yCord] == "x" {
-		board.playerFields[xCord][yCord] = "O"
-		neighbours := checkNeighborus(board.height, board.width, xCord, yCord)
-
-		for _, neigh := range neighbours {
-			board.revealEmpty(xCord+neigh[0], yCord+neigh[1])
-		}
-
-		return
-	}
 
 	if board.dataFields[xCord][yCord] != 9 && board.dataFields[xCord][yCord] != 0 {
 		board.playerFields[xCord][yCord] = strconv.Itoa(board.dataFields[xCord][yCord])
+		return
+	}
+	if board.playerFields[xCord][yCord] == "O" {
+		return
+	}
+	board.playerFields[xCord][yCord] = "O"
+	neighbours := checkNeighborus(board.height, board.width, xCord, yCord)
+
+	for _, neigh := range neighbours {
+		if board.dataFields[xCord+neigh[0]][yCord+neigh[1]] != BOMB {
+			board.revealEmpty(xCord+neigh[0], yCord+neigh[1])
+		}
 	}
 }
