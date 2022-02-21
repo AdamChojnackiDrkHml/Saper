@@ -150,11 +150,11 @@ func (board *boardS) CheckField(xCord, yCord int) State {
 		return Invalid
 	}
 
-	if board.dataFields[xCord][yCord] == BOMB {
+	if board.dataFields[xCord][yCord] == int(BOMB) {
 		board.playerFields[xCord][yCord] = emoji.Sprint(":bomb:")
 		return GameOver
 	}
-	if board.dataFields[xCord][yCord] == ZERO {
+	if board.dataFields[xCord][yCord] == int(ZERO) {
 		board.revealEmpty(xCord, yCord)
 		return Valid
 	}
@@ -165,7 +165,7 @@ func (board *boardS) CheckField(xCord, yCord int) State {
 func (board *boardS) CheckAllBombs() {
 	for i, row := range board.dataFields {
 		for j := range row {
-			if board.dataFields[i][j] == BOMB {
+			if board.dataFields[i][j] == int(BOMB) {
 				board.playerFields[i][j] = emoji.Sprint(":bomb:")
 			}
 		}
@@ -185,7 +185,7 @@ func (board *boardS) revealEmpty(xCord, yCord int) {
 	neighbours := checkNeighborus(board.height, board.width, xCord, yCord)
 
 	for _, neigh := range neighbours {
-		if board.dataFields[xCord+neigh[0]][yCord+neigh[1]] != BOMB {
+		if board.dataFields[xCord+neigh[0]][yCord+neigh[1]] != int(BOMB) {
 			board.revealEmpty(xCord+neigh[0], yCord+neigh[1])
 		}
 	}
