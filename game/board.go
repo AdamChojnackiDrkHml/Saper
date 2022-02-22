@@ -159,10 +159,10 @@ func (board *boardS) CheckField(xCord, yCord int) State {
 		fmt.Println("Are you sure? [y/N]")
 		ans := ""
 		fmt.Scanf("%s", &ans)
-
 		if ans != "y" {
-			return Invalid
+			return Valid
 		}
+		return Invalid
 	}
 
 	if board.dataFields[xCord][yCord] == int(BOMB) {
