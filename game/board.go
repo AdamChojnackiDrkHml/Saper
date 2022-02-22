@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kyokomi/emoji"
@@ -134,6 +135,8 @@ func (board *boardS) PrintPlayerBoard() {
 			if ch == "x" {
 				emoji.Print(":green_square:")
 				continue
+			} else if ch == "X" {
+				emoji.Print(":yellow_square:")
 			} else if ch == "O" {
 				emoji.Print(":white_large_square:")
 			} else if ch != ":bomb:" {
@@ -148,6 +151,16 @@ func (board *boardS) PrintPlayerBoard() {
 func (board *boardS) CheckField(xCord, yCord int) State {
 	if xCord < 0 || xCord > board.height-1 || yCord < 0 || yCord > board.width-1 {
 		return Invalid
+	}
+
+	if board.playerFields[xCord][yCord] == "X" {
+		fmt.Println("Are you sure? [y/N]")
+		ans := ""
+		fmt.Scanf("%s", &ans)
+
+		if ans != "y" {
+			return Invalid
+		}
 	}
 
 	if board.dataFields[xCord][yCord] == int(BOMB) {
@@ -189,4 +202,68 @@ func (board *boardS) revealEmpty(xCord, yCord int) {
 			board.revealEmpty(xCord+neigh[0], yCord+neigh[1])
 		}
 	}
+}
+
+func (board *boardS) InterpretCmd(command string) bool {
+	params := strings.Fields(command)
+	fmt.Println(params)
+
+	y, err := strconv.Atoi(params[1])
+	if err != nil {
+		fmt.Println("WRONG x pos")
+		return false
+	}
+	x, err := strconv.Atoi(params[0])
+	if err != nil {
+		fmt.Println("Wrong y pos")
+		return false
+	}
+
+	if len(params) == 3 {
+		if params[2] == "-f" {
+			if !board.markField(x, y) {
+				return false
+			}
+		}
+	} else {
+		state := board.CheckField(x, y)
+		if !state {
+			board.CheckAllBombs()
+			return false
+		}
+	}
+	return true
+}
+
+func (board *boardS) markField(xPos, yPos int) bool {
+	if board.playerFields[xPos][yPos] == "X" {
+		board.playerFields[xPos][yPos] = "x"
+		return true
+	}
+
+	if board.playerFields[xPos][yPos] == "x" {
+		board.playerFields[xPos][yPos] = "X"
+		return true
+	}
+
+	fmt.Println("You cannot mark this field")
+	return true
+}
+
+func (board *boardS) CheckWin() bool {
+	counter := 0
+
+	for _, row := range board.playerFields {
+		for _, k := range row {
+			if k == "x" || k == "X" {
+				counter++
+				if counter > board.bombsCounter {
+					fmt.Println(k, " ", counter)
+					return false
+				}
+			}
+		}
+	}
+	fmt.Println("CONGRATULATIONS")
+	return true
 }
