@@ -139,8 +139,10 @@ func (board *boardS) PrintPlayerBoard() {
 				emoji.Print(":yellow_square:")
 			} else if ch == "O" {
 				emoji.Print(":white_large_square:")
-			} else if ch != ":bomb:" {
+			} else if ch != emoji.Sprint(":bomb:") {
 				emoji.Print(":keycap_" + ch + ": ")
+			} else {
+				emoji.Print(":bomb:")
 			}
 			///fmt.Print(ch + "\t")
 		}
