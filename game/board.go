@@ -210,12 +210,12 @@ func (board *boardS) InterpretCmd(command string) bool {
 	params := strings.Fields(command)
 	fmt.Println(params)
 
-	y, err := strconv.Atoi(params[1])
+	x, err := strconv.Atoi(params[0])
 	if err != nil {
 		fmt.Println("WRONG x pos")
 		return false
 	}
-	x, err := strconv.Atoi(params[0])
+	y, err := strconv.Atoi(params[1])
 	if err != nil {
 		fmt.Println("Wrong y pos")
 		return false
@@ -223,12 +223,12 @@ func (board *boardS) InterpretCmd(command string) bool {
 
 	if len(params) == 3 {
 		if params[2] == "-f" {
-			if !board.markField(x, y) {
+			if !board.markField(y, x) {
 				return false
 			}
 		}
 	} else {
-		state := board.CheckField(x, y)
+		state := board.CheckField(y, x)
 		if !state {
 			board.CheckAllBombs()
 			return false

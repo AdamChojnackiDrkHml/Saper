@@ -11,12 +11,19 @@ import (
 func main() {
 	controlChannel := make(chan bool, 1)
 	go game.Timer(controlChannel)
+	var N, M, B int
+	if len(os.Args) > 3 {
+		n, err1 := strconv.Atoi(os.Args[1])
+		m, err2 := strconv.Atoi(os.Args[2])
+		b, err3 := strconv.Atoi(os.Args[3])
 
-	N, err1 := strconv.Atoi(os.Args[1])
-	M, err2 := strconv.Atoi(os.Args[2])
-	B, err3 := strconv.Atoi(os.Args[3])
+		if err1 != nil || err2 != nil || err3 != nil {
+			N, M, B = 5, 5, 4
+		} else {
+			N, M, B = n, m, b
+		}
 
-	if err1 != nil || err2 != nil || err3 != nil {
+	} else {
 		N, M, B = 5, 5, 4
 	}
 	time.Sleep(0 * time.Second)
