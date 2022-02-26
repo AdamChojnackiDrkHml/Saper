@@ -38,7 +38,8 @@ func main() {
 		txt, _, _ := reader.ReadLine()
 		state := board.InterpretCmd(string(txt))
 
-		board.PrintPlayerBoard()
+		//NO DISPLAY HERE
+		//		board.PrintPlayerBoard()
 
 		if !state {
 			break
